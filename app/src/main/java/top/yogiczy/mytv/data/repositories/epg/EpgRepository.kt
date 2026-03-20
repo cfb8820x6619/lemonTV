@@ -14,6 +14,7 @@ import top.yogiczy.mytv.data.entities.EpgProgramme
 import top.yogiczy.mytv.data.entities.EpgProgrammeList
 import top.yogiczy.mytv.data.repositories.FileCacheRepository
 import top.yogiczy.mytv.data.repositories.epg.fetcher.EpgFetcher
+import top.yogiczy.mytv.data.utils.Constants
 import top.yogiczy.mytv.utils.Logger
 import java.io.File
 import java.io.StringReader
@@ -309,31 +310,37 @@ private class EpgXmlRepository : FileCacheRepository("epg.xml") {
         val client = OkHttpClient()
         val requestBuilder = Request.Builder().url(url)
         
-        if (!userAgent.isNullOrBlank()) {
-            // 用 APP 名称构造请求头，模拟该 APP 的请求特征
-            // 同时添加 Referer、Origin 等头，绕过服务器防盗链
+            // 计算最终 UA：当链接域名是 aptv.app 时，强制使用 APTV 专用 UA
             val host = try {
                 android.net.Uri.parse(url).host ?: ""
             } catch (e: Exception) { "" }
-            
-            requestBuilder
-                .header("User-Agent", userAgent)
-                .header("X-App-Name", userAgent)
-            
-            // 针对 aptv.app 域名，添加其服务器期望的 Referer/Origin
-            if (host.contains("aptv.app")) {
+            val effectiveUserAgent =
+                if (host.contains("aptv.app")) Constants.VIDEO_PLAYER_USER_AGENT_APTV else userAgent
+
+            if (!effectiveUserAgent.isNullOrBlank()) {
+                // 用 User-Agent 构造请求头（同时保留 X-App-Name 兼容旧逻辑）
                 requestBuilder
-                    .header("Referer", "https://aptv.app/")
-                    .header("Origin", "https://aptv.app")
-            } else {
-                // 通用策略：用 EPG 域名本身作为 Referer
-                if (host.isNotBlank()) {
-                    requestBuilder.header("Referer", "https://$host/")
+                    .header("User-Agent", effectiveUserAgent)
+                    .header("X-App-Name", effectiveUserAgent)
+
+                // 针对 aptv.app 域名，添加其服务器期望的 Referer/Origin
+                if (host.contains("aptv.app")) {
+                    requestBuilder
+                        .header("Referer", "https://aptv.app/")
+                        .header("Origin", "https://aptv.app")
+                } else {
+                    // 通用策略：用 EPG 域名本身作为 Referer
+                    if (host.isNotBlank()) {
+                        requestBuilder.header("Referer", "https://$host/")
+                    }
                 }
+
+                log.i(
+                    "EPG请求头 - UA: $effectiveUserAgent, Referer: ${
+                        if (host.contains("aptv.app")) "https://aptv.app/" else "https://$host/"
+                    }"
+                )
             }
-            
-            log.i("EPG请求头 - UA: $userAgent, Referer: ${if (host.contains("aptv.app")) "https://aptv.app/" else "https://$host/"}")
-        }
         
         val request = requestBuilder.build()
 

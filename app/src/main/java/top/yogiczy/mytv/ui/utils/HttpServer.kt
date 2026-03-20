@@ -16,8 +16,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import top.yogiczy.mytv.AppGlobal
 import top.yogiczy.mytv.R
-import top.yogiczy.mytv.data.repositories.epg.EpgRepository
-import top.yogiczy.mytv.data.repositories.iptv.IptvRepository
 import top.yogiczy.mytv.data.utils.Constants
 import top.yogiczy.mytv.utils.ApkInstaller
 import top.yogiczy.mytv.utils.Loggable
@@ -132,38 +130,26 @@ object HttpServer : Loggable() {
         val epgXmlUrlName = body.optString("epgXmlUrlName", "")
         val videoPlayerUserAgent = body.get("videoPlayerUserAgent").toString()
 
-        if (SP.iptvSourceUrl != iptvSourceUrl) {
-            SP.iptvSourceUrl = iptvSourceUrl
-            // 添加到历史记录，这样电视端设置界面会自动显示
-            if (iptvSourceUrl.isNotBlank()) {
-                SP.iptvSourceUrlHistoryList = SP.iptvSourceUrlHistoryList + iptvSourceUrl
-                // 保存名称映射
-                if (iptvSourceName.isNotBlank()) {
-                    SP.iptvSourceNameMap = SP.iptvSourceNameMap + (iptvSourceUrl to iptvSourceName)
-                }
+        // 重要：网页推送只用于“新增/更新历史列表”，不改变当前已选中的直播源/节目单/UA。
+        // 避免 UI 通过“当前值 == 列表项”计算 selected/勾选状态时自动选中新推送的数据。
+        if (iptvSourceUrl.isNotBlank()) {
+            SP.iptvSourceUrlHistoryList = SP.iptvSourceUrlHistoryList + iptvSourceUrl
+            // 保存名称映射（同时用于节目单列表展示）
+            if (iptvSourceName.isNotBlank()) {
+                SP.iptvSourceNameMap = SP.iptvSourceNameMap + (iptvSourceUrl to iptvSourceName)
             }
-            IptvRepository().clearCache()
         }
 
-        if (SP.epgXmlUrl != epgXmlUrl) {
-            SP.epgXmlUrl = epgXmlUrl
-            // 添加到历史记录
-            if (epgXmlUrl.isNotBlank()) {
-                SP.epgXmlUrlHistoryList = SP.epgXmlUrlHistoryList + epgXmlUrl
-                // 保存名称映射
-                if (epgXmlUrlName.isNotBlank()) {
-                    SP.iptvSourceNameMap = SP.iptvSourceNameMap + (epgXmlUrl to epgXmlUrlName)
-                }
+        if (epgXmlUrl.isNotBlank()) {
+            SP.epgXmlUrlHistoryList = SP.epgXmlUrlHistoryList + epgXmlUrl
+            // 保存名称映射
+            if (epgXmlUrlName.isNotBlank()) {
+                SP.iptvSourceNameMap = SP.iptvSourceNameMap + (epgXmlUrl to epgXmlUrlName)
             }
-            EpgRepository().clearCache()
         }
 
-        if (SP.videoPlayerUserAgent != videoPlayerUserAgent) {
-            SP.videoPlayerUserAgent = videoPlayerUserAgent
-            // 添加到历史记录
-            if (videoPlayerUserAgent.isNotBlank()) {
-                SP.videoPlayerUserAgentHistoryList = SP.videoPlayerUserAgentHistoryList + videoPlayerUserAgent
-            }
+        if (videoPlayerUserAgent.isNotBlank()) {
+            SP.videoPlayerUserAgentHistoryList = SP.videoPlayerUserAgentHistoryList + videoPlayerUserAgent
         }
 
         wrapResponse(response).send("success")

@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import android.net.Uri
 import top.yogiczy.mytv.data.entities.Iptv
 import top.yogiczy.mytv.data.entities.IptvGroup
 import top.yogiczy.mytv.data.entities.IptvGroupList
@@ -11,6 +12,7 @@ import top.yogiczy.mytv.data.entities.IptvList
 import top.yogiczy.mytv.data.repositories.FileCacheRepository
 import top.yogiczy.mytv.data.repositories.iptv.parser.IptvParser
 import top.yogiczy.mytv.data.repositories.iptv.parser.M3uIptvParser
+import top.yogiczy.mytv.data.utils.Constants
 import top.yogiczy.mytv.utils.Logger
 
 /**
@@ -46,6 +48,18 @@ class IptvRepository : FileCacheRepository("iptv.txt") {
         }
         
         val requestBuilder = Request.Builder().url(sourceUrl)
+
+        // 针对 aptv.app 域名使用专用 UA（避免被反爬/鉴权拦截）
+        val host = try {
+            Uri.parse(sourceUrl).host ?: ""
+        } catch (_: Exception) {
+            ""
+        }
+        if (host.contains("aptv.app")) {
+            requestBuilder
+                .header("User-Agent", Constants.VIDEO_PLAYER_USER_AGENT_APTV)
+                .header("X-App-Name", Constants.VIDEO_PLAYER_USER_AGENT_APTV)
+        }
         
         // 强制刷新时，额外添加 HTTP 头绕过缓存
         if (forceRefresh) {

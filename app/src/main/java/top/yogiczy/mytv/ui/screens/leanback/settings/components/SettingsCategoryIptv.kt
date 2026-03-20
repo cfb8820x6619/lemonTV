@@ -290,6 +290,7 @@ private fun LeanbackSettingsIptvSourceHistoryDialog(
                                     text = nameMap[source] ?: when {
                                         source == Constants.IPTV_SOURCE_URL -> "默认源"
                                         source.contains("migu.m3u") -> "咪咕源"
+                                        source.contains("aptv.app") -> "APTV"
                                         source.contains("httop.m3u") && !source.contains("merged") -> "HTTOP源"
                                         source.contains("httop_merged") -> "HTTOP合并源"
                                         source.contains("iptv.m3u") && !source.contains("merged") -> "IPTV源"

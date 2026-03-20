@@ -15,9 +15,10 @@ object Constants {
     const val APP_REPO = "https://github.com/jia070310/lemonTV"
 
     /**
-     * IPTV源地址（使用 ghfast.top 代理，更稳定）
+     * IPTV源地址（默认直播源）
      */
-    const val IPTV_SOURCE_URL = "https://ghfast.top/https://raw.githubusercontent.com/jia070310/lemonTV/refs/heads/main/iptv-fe.m3u"
+    const val IPTV_SOURCE_URL =
+        "https://gh-proxy.org/https://github.com/jia070310/lemonTV/blob/main/iptv-fe.m3u"
     
     /**
      * 默认IPTV源列表（用于快速切换）
@@ -25,10 +26,8 @@ object Constants {
     val IPTV_SOURCE_DEFAULT_LIST = listOf(
         IPTV_SOURCE_URL,
         "https://gh-proxy.org/github.com/ioptu/IPTV.txt2m3u.player/raw/refs/heads/main/migu.m3u",
-        "https://gh-proxy.org/github.com/ioptu/IPTV.txt2m3u.player/raw/refs/heads/main/httop.m3u",
-        "https://gh-proxy.org/github.com/ioptu/IPTV.txt2m3u.player/raw/refs/heads/main/httop_merged.m3u",
-        "https://gh-proxy.org/github.com/ioptu/IPTV.txt2m3u.player/raw/refs/heads/main/iptv.m3u",
-        "https://gh-proxy.org/github.com/ioptu/IPTV.txt2m3u.player/raw/refs/heads/main/iptv_merged.m3u",
+        // APTV 第三默认源
+        "https://gh.aptv.app/https://raw.githubusercontent.com/Kimentanm/aptv/master/m3u/iptv.m3u",
     )
 
     /**
@@ -76,6 +75,13 @@ object Constants {
      * 播放器 userAgent
      */
     const val VIDEO_PLAYER_USER_AGENT = "ExoPlayer"
+
+    /**
+     * APTV 专用 User-Agent
+     * 业务规则：当解析/请求的链接域名包含 `aptv.app` 时使用该 UA。
+     */
+    const val VIDEO_PLAYER_USER_AGENT_APTV =
+        "AptvPlayer/1.4.25 (iPhone; CPU iPhone OS 26.3.1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
 
     /**
      * 日志历史最大保留条数

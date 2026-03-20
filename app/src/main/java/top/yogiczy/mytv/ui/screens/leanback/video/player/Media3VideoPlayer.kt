@@ -28,6 +28,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import top.yogiczy.mytv.ui.utils.SP
 import androidx.media3.common.PlaybackException as Media3PlaybackException
+import top.yogiczy.mytv.data.utils.Constants
 
 @OptIn(UnstableApi::class)
 class LeanbackMedia3VideoPlayer(
@@ -57,12 +58,18 @@ class LeanbackMedia3VideoPlayer(
         }
         
         // 使用智能降级的 User-Agent（优先级：频道UA > 全局UA > 设置UA > 默认UA）
-        val smartUA = when {
-            !userAgent.isNullOrBlank() -> {
-                log.i("使用频道级 User-Agent: $userAgent")
-                userAgent
+        val host = uri.host ?: ""
+        val smartUA = if (host.contains("aptv.app")) {
+            log.i("使用 aptv.app 专用 User-Agent: ${Constants.VIDEO_PLAYER_USER_AGENT_APTV}")
+            Constants.VIDEO_PLAYER_USER_AGENT_APTV
+        } else {
+            when {
+                !userAgent.isNullOrBlank() -> {
+                    log.i("使用频道级 User-Agent: $userAgent")
+                    userAgent
+                }
+                else -> SP.getSmartUserAgent(top.yogiczy.mytv.AppGlobal.extractedUserAgent)
             }
-            else -> SP.getSmartUserAgent(top.yogiczy.mytv.AppGlobal.extractedUserAgent)
         }
         
         val dataSourceFactory =

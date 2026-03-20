@@ -143,6 +143,7 @@ fun LeanbackQuickPanelIptvSourceDialog(
                                         text = nameMap[url] ?: when {
                                             url == Constants.IPTV_SOURCE_URL -> "默认源"
                                             url.contains("migu.m3u") -> "咪咕源"
+                                        url.contains("aptv.app") -> "APTV"
                                             url.contains("httop.m3u") && !url.contains("merged") -> "HTTOP源"
                                             url.contains("httop_merged") -> "HTTOP合并源"
                                             url.contains("iptv.m3u") && !url.contains("merged") -> "IPTV源"

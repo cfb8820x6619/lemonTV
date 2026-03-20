@@ -111,7 +111,8 @@ fun LeanbackSettingsCategoryVideoPlayer(
                 onDismissRequest = { showDialog = false },
                 uaHistoryProvider = {
                     settingsViewModel.videoPlayerUserAgentHistoryList.filter {
-                        it != Constants.VIDEO_PLAYER_USER_AGENT
+                        it != Constants.VIDEO_PLAYER_USER_AGENT &&
+                            it != Constants.VIDEO_PLAYER_USER_AGENT_APTV
                     }.toImmutableList()
                 },
                 currentUAProvider = { settingsViewModel.videoPlayerUserAgent },
@@ -152,7 +153,14 @@ private fun LeanbackSettingsVideoPlayerUAHistoryDialog(
     onDeleted: (String) -> Unit = {},
 ) {
     // 使用 State 来存储历史记录，以便可以动态更新
-    var uaHistory by remember { mutableStateOf(listOf(Constants.VIDEO_PLAYER_USER_AGENT) + uaHistoryProvider()) }
+    var uaHistory by remember {
+        mutableStateOf(
+            listOf(
+                Constants.VIDEO_PLAYER_USER_AGENT,
+                Constants.VIDEO_PLAYER_USER_AGENT_APTV,
+            ) + uaHistoryProvider(),
+        )
+    }
     val currentUA = currentUAProvider()
 
     // 定期刷新历史记录，以便网页端推送后能自动显示
@@ -161,9 +169,14 @@ private fun LeanbackSettingsVideoPlayerUAHistoryDialog(
             while (true) {
                 delay(1000) // 每秒检查一次
                 // 直接从 SP 读取最新数据
-                val newHistory = listOf(Constants.VIDEO_PLAYER_USER_AGENT) + SP.videoPlayerUserAgentHistoryList.filter {
-                    it != Constants.VIDEO_PLAYER_USER_AGENT
-                }
+                val newHistory =
+                    listOf(
+                        Constants.VIDEO_PLAYER_USER_AGENT,
+                        Constants.VIDEO_PLAYER_USER_AGENT_APTV,
+                    ) + SP.videoPlayerUserAgentHistoryList.filter {
+                        it != Constants.VIDEO_PLAYER_USER_AGENT &&
+                            it != Constants.VIDEO_PLAYER_USER_AGENT_APTV
+                    }
                 if (newHistory != uaHistory) {
                     uaHistory = newHistory
                     Log.i("SettingsCategoryVideoPlayer", "检测到UA历史记录更新，已刷新列表，当前数量: ${newHistory.size}")
@@ -214,7 +227,10 @@ private fun LeanbackSettingsVideoPlayerUAHistoryDialog(
                                             else focusRequester.requestFocus()
                                         },
                                         onLongSelect = {
-                                            if (isFocused) onDeleted(ua)
+                                            if (isFocused &&
+                                                ua != Constants.VIDEO_PLAYER_USER_AGENT &&
+                                                ua != Constants.VIDEO_PLAYER_USER_AGENT_APTV
+                                            ) onDeleted(ua)
                                             else focusRequester.requestFocus()
                                         }
                                     ),
@@ -226,15 +242,22 @@ private fun LeanbackSettingsVideoPlayerUAHistoryDialog(
                                 onClick = { },
                                 headlineContent = {
                                     androidx.tv.material3.Text(
-                                        text = if (ua == Constants.VIDEO_PLAYER_USER_AGENT) "默认UA" else ua,
+                                        text = when (ua) {
+                                            Constants.VIDEO_PLAYER_USER_AGENT -> "默认UA"
+                                            Constants.VIDEO_PLAYER_USER_AGENT_APTV -> "APTV专用"
+                                            else -> ua
+                                        },
                                         maxLines = if (isFocused) Int.MAX_VALUE else 2,
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 },
-                                supportingContent = if (ua == Constants.VIDEO_PLAYER_USER_AGENT) {
+                                supportingContent = if (
+                                    ua == Constants.VIDEO_PLAYER_USER_AGENT ||
+                                        ua == Constants.VIDEO_PLAYER_USER_AGENT_APTV
+                                ) {
                                     {
                                         androidx.tv.material3.Text(
-                                            text = Constants.VIDEO_PLAYER_USER_AGENT,
+                                            text = ua,
                                             maxLines = if (isFocused) Int.MAX_VALUE else 1,
                                         )
                                     }
