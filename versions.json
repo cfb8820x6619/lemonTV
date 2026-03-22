@@ -1,10 +1,12 @@
 {
   "android": {
-    "latest_version": "1.1.4",  
-    "download_url": "https://github.com/jia070310/lemonTV/releases/download/v1.1.4/LemonTV-v1.1.4-release.apk",
+    "latest_version": "1.1.9",
+    "download_url": "https://github.com/jia070310/lemonTV/releases/download/v1.1.9/LemonIPTV-v1.1.9-release.apk",
     "update_log": [
-      "🪟更新了更新方式"
-      ]
+      "修复 Media3 与 FFmpeg 扩展版本不一致导致的启动闪退",
+      "compileSdk/targetSdk 35，AGP 8.6.1",
+      "FFmpeg 解码改为 Maven 依赖，移除本地 AAR"
+    ]
   },
   "windows": {
     "latest_version": "1.1.4",  

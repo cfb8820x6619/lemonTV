@@ -19,3 +19,7 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Media3 / Jellyfin FFmpeg 扩展：JNI 依赖 Java 类名与方法签名，R8 混淆或裁剪会导致加载 native 后崩溃
+-keep class androidx.media3.decoder.ffmpeg.** { *; }
+-dontwarn androidx.media3.decoder.ffmpeg.**

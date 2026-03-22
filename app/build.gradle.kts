@@ -16,14 +16,14 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "top.yogiczy.mytv"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.lemoniptv.lite"
         minSdk = 21
-        targetSdk = 34
-        versionCode = 18
-        versionName = "1.1.8"
+        targetSdk = 35
+        versionCode = 19
+        versionName = "1.1.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -46,6 +46,7 @@ android {
         }
     }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
@@ -58,6 +59,10 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+        // 本地 libs/*.aar 若含 FFmpeg JNI，会与 Jellyfin media3-ffmpeg-decoder 重复
+        jniLibs {
+            pickFirsts += "**/libffmpegJNI.so"
         }
     }
     signingConfigs {
@@ -79,6 +84,7 @@ android {
 }
 
 dependencies {
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -96,10 +102,11 @@ dependencies {
     implementation(libs.androidx.tv.foundation)
     implementation(libs.androidx.tv.material)
 
-    // 播放器
+    // 播放器（Jellyfin FFmpeg 扩展与 media3 主版本须一致，用于广电类 AC3/DTS 等音轨）
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.exoplayer.hls)
     implementation(libs.androidx.media3.exoplayer.rtsp)
+    implementation(libs.jellyfin.media3.ffmpeg.decoder)
 
     // 序列化
     implementation(libs.kotlinx.serialization)

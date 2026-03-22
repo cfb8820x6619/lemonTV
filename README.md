@@ -35,9 +35,21 @@
 
 | 文件名 | 说明 |
 |--------|------|
-| `LemonIPTV-vX.X.X-release.apk` | 正式发布版（推荐） |
+| `LemonIPTV-v1.1.9-release.apk` | 正式发布版（推荐） |
+| `mytv-android*.apk` | GitHub Actions 自动构建时的产物命名（以 [Releases](https://github.com/jia070310/lemonTV/releases) 页面附件为准） |
 
 > 安装时如提示"未知来源"，请在系统设置中允许安装即可。
+
+---
+
+## 📝 更新日志
+
+### v1.1.9（2026-03-22）
+
+- **修复**：对齐 AndroidX **Media3 1.5.1** 与 **Jellyfin FFmpeg 扩展**（`media3-ffmpeg-decoder`），解决部分设备启动后因 `RendererCapabilities` / `NoSuchMethodError` 导致的闪退。
+- **构建**：`compileSdk` / `targetSdk` 提升至 **35**，Android Gradle Plugin **8.6.1**。
+- **依赖**：FFmpeg 软解改为 Maven 依赖，移除本地 `lib-decoder-ffmpeg-release.aar`，避免与扩展库冲突。
+- **兼容**：适配 API 35 下 `PackageInfo.versionName` 可空等变更。
 
 ---
 
@@ -69,9 +81,10 @@
 
 - **语言**：Kotlin
 - **UI 框架**：Jetpack Compose for TV（Material3）
-- **播放器**：Media3 / ExoPlayer + FFmpeg 扩展
+- **播放器**：Media3（ExoPlayer）**1.5.x** + [Jellyfin `media3-ffmpeg-decoder`](https://central.sonatype.com/artifact/org.jellyfin.media3/media3-ffmpeg-decoder)（与主库版本对齐）
 - **网络**：OkHttp
 - **最低系统版本**：Android 5.0（API 21）
+- **编译目标**：`compileSdk` / `targetSdk` **35**
 
 ---
 

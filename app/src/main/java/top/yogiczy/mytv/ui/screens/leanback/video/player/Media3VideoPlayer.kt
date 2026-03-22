@@ -37,6 +37,8 @@ class LeanbackMedia3VideoPlayer(
 ) : LeanbackVideoPlayer(coroutineScope) {
     private val videoPlayer = ExoPlayer.Builder(
         context,
+        // ON：系统解码优先（4K 视频走 MediaCodec）；FFmpeg 仅补充 AC3/DTS 等系统不支持的音轨。
+        // PREFER 会让 FFmpeg 优先于硬件解码，4K HEVC 软解易 OOM/闪退。
         DefaultRenderersFactory(context).setExtensionRendererMode(EXTENSION_RENDERER_MODE_ON)
     ).build().apply {
         playWhenReady = true
