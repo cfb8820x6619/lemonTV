@@ -31,21 +31,59 @@ jobs:
           echo "文件不存在，将创建新文件"
         fi
     
-    # 步骤3：下载最新源文件
-    - name: Download latest file
+    # 步骤3：下载两个源文件并合并
+    - name: Download and merge source files
       id: download
       run: |
-        # 下载源文件
-        curl -s -L -o new-iptv.m3u "https://github.com/ioptu/IPTV.txt2m3u.player/raw/refs/heads/main/migu.m3u"
+        # 下载第一个源文件
+        echo "下载 migu.m3u ..."
+        curl -s -L -o migu.m3u "https://raw.githubusercontent.com/ioptu/migu_video/main/migu.m3u"
         
-        # 计算新文件哈希
+        # 下载第二个源文件
+        echo "下载 cctv.migu.m3u ..."
+        curl -s -L -o cctv.migu.m3u "https://raw.githubusercontent.com/ioptu/migu_video/main/cctv.migu.m3u"
+        
+        # 合并两个文件（智能处理 #EXTM3U 头部）
+        cat > new-iptv.m3u << 'EOF'
+        EOF
+        
+        # 处理第一个文件：保留其头部和所有内容
+        if [ -s migu.m3u ]; then
+          # 如果第一个文件以 #EXTM3U 开头，则保留整行；否则直接追加
+          head -1 migu.m3u | grep -q "^#EXTM3U" && has_header1=true || has_header1=false
+          if [ "$has_header1" = true ]; then
+            cat migu.m3u >> new-iptv.m3u
+          else
+            echo "#EXTM3U" >> new-iptv.m3u
+            cat migu.m3u >> new-iptv.m3u
+          fi
+        fi
+        
+        # 处理第二个文件：去除可能重复的 #EXTM3U 头部
+        if [ -s cctv.migu.m3u ]; then
+          # 如果第二个文件以 #EXTM3U 开头，则跳过第一行；否则直接追加
+          head -1 cctv.migu.m3u | grep -q "^#EXTM3U" && has_header2=true || has_header2=false
+          if [ "$has_header2" = true ]; then
+            tail -n +2 cctv.migu.m3u >> new-iptv.m3u
+          else
+            cat cctv.migu.m3u >> new-iptv.m3u
+          fi
+        fi
+        
+        # 计算合并后的文件哈希
         NEW_HASH=$(sha256sum new-iptv.m3u | awk '{print $1}')
         echo "new_hash=$NEW_HASH" >> $GITHUB_OUTPUT
         
-        # 获取文件信息
+        # 获取合并后的文件信息
         FILESIZE=$(stat -f%z new-iptv.m3u 2>/dev/null || stat -c%s new-iptv.m3u)
         LINES=$(wc -l < new-iptv.m3u)
-        echo "新文件大小: ${FILESIZE}字节, ${LINES}行"
+        echo "合并后文件大小: ${FILESIZE}字节, ${LINES}行"
+        
+        # 记录两个源文件的行数（用于邮件）
+        LINES1=$(wc -l < migu.m3u)
+        LINES2=$(wc -l < cctv.migu.m3u)
+        echo "source1_lines=$LINES1" >> $GITHUB_OUTPUT
+        echo "source2_lines=$LINES2" >> $GITHUB_OUTPUT
     
     # 步骤4：比较并决定是否更新
     - name: Compare files
@@ -74,8 +112,9 @@ jobs:
         git add iptv-fe.m3u
         git commit -m "🔄 自动同步IPTV: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
         
-        源文件: https://github.com/ioptu/IPTV.txt2m3u.player
-        新哈希: ${{ steps.download.outputs.new_hash }}
+        源文件1: migu.m3u (来自 ioptu/migu_video)
+        源文件2: cctv.migu.m3u (来自 ioptu/migu_video)
+        合并后哈希: ${{ steps.download.outputs.new_hash }}
         旧哈希: ${{ steps.hash_check.outputs.old_hash }}"
         
         # 推送更改
@@ -101,15 +140,17 @@ jobs:
           <div style="background-color: #f0f8ff; padding: 15px; border-radius: 5px; margin: 15px 0;">
             <p><strong>🔄 同步状态：</strong> <span style="color: green;">✅ 成功更新</span></p>
             <p><strong>📅 更新时间：</strong> $(date -u '+%Y-%m-%d %H:%M:%S UTC')</p>
-            <p><strong>🔗 源文件地址：</strong> <a href="https://github.com/ioptu/IPTV.txt2m3u.player">ioptu/IPTV.txt2m3u.player</a></p>
-            <p><strong>📂 你的文件：</strong> <a href="https://github.com/jia070310/lemonTV/blob/main/iptv-fe.m3u">jia070310/lemonTV/iptv-fe.m3u</a></p>
+            <p><strong>🔗 源文件1（migu.m3u）：</strong> <a href="https://github.com/ioptu/migu_video/blob/main/migu.m3u">ioptu/migu_video/migu.m3u</a> (共 ${{ steps.download.outputs.source1_lines }} 行)</p>
+            <p><strong>🔗 源文件2（cctv.migu.m3u）：</strong> <a href="https://github.com/ioptu/migu_video/blob/main/cctv.migu.m3u">ioptu/migu_video/cctv.migu.m3u</a> (共 ${{ steps.download.outputs.source2_lines }} 行)</p>
+            <p><strong>📂 你的文件（合并后）：</strong> <a href="https://github.com/jia070310/lemonTV/blob/main/iptv-fe.m3u">jia070310/lemonTV/iptv-fe.m3u</a></p>
           </div>
           
           <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 15px 0;">
             <h3>📊 文件信息</h3>
-            <p><strong>新文件哈希：</strong> <code>${{ steps.download.outputs.new_hash }}</code></p>
+            <p><strong>合并后文件哈希：</strong> <code>${{ steps.download.outputs.new_hash }}</code></p>
             <p><strong>旧文件哈希：</strong> <code>${{ steps.hash_check.outputs.old_hash }}</code></p>
             <p><strong>哈希变化：</strong> <span style="color: blue;">已检测到变化</span></p>
+            <p><strong>合并后总行数：</strong> 约 $(wc -l < iptv-fe.m3u) 行</p>
           </div>
           
           <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #ddd;">
