@@ -11,7 +11,7 @@ jobs:
     
     steps:
     - name: Checkout your repo
-      uses: actions/checkout@v5        # 升级到 v5，避免 Node 20 警告
+      uses: actions/checkout@v5
       with:
         token: ${{ secrets.PAT_TOKEN }}
     
@@ -25,48 +25,18 @@ jobs:
           echo "old_hash=none" >> $GITHUB_OUTPUT
         fi
     
-    # 核心修改：下载 → 处理 cctv 文件 → 合并
-    - name: Download, process and merge source files
+    # 下载 → 修正 cctv 文件格式 → 合并
+    - name: Download, fix and merge source files
       id: download
       run: |
         # 下载两个源文件
         curl -s -L -o migu.m3u "https://raw.githubusercontent.com/ioptu/migu_video/main/migu.m3u"
         curl -s -L -o cctv_raw.m3u "https://raw.githubusercontent.com/ioptu/migu_video/main/cctv.migu.m3u"
         
-        # 处理 cctv 文件：为每个 #EXTINF 行添加 group-title="央视专版"
-        # 规则：如果该行已有 group-title=xxx，则替换为 group-title="央视专版"；
-        #       如果没有，则在行尾（频道名之前）插入 group-title="央视专版"
-        awk '
-          /^#EXTINF:/ {
-            # 提取频道名（最后一个逗号之后的部分）
-            if (match($0, /,[^,]+$/, arr)) {
-              channel_name = substr($0, RSTART+1)
-              rest = substr($0, 1, RSTART-1)
-            } else {
-              channel_name = ""
-              rest = $0
-            }
-            # 处理 group-title
-            if (rest ~ /group-title="[^"]*"/) {
-              # 已有 group-title，替换值
-              gsub(/group-title="[^"]*"/, "group-title=\"央视专版\"", rest)
-            } else {
-              # 没有 group-title，在 tvg-name 之后或 EXTINF 参数末尾添加
-              # 简单做法：在行尾逗号之前插入 group-title="央视专版"
-              # 注意：EXTINF 行格式一般为 #EXTINF:0 tvg-id="..." tvg-name="..." ...,频道名
-              # 我们将其插入到最后一个属性之后，逗号之前
-              if (match(rest, / [a-z-]+="[^"]*"/)) {
-                # 找到最后一个属性结束的位置（简单起见，直接在行尾逗号前插入）
-                sub(/,/, " group-title=\"央视专版\",", rest)
-              } else {
-                sub(/,/, " group-title=\"央视专版\",", rest)
-              }
-            }
-            print rest channel_name
-            next
-          }
-          { print }
-        ' cctv_raw.m3u > cctv_modified.m3u
+        # 修正 cctv 文件：在每个 #EXTINF 行的 tvg-logo="..." 后面插入 ,group-title="央视专版",
+        # 原始格式：#EXTINF:-1 tvg-id="CCTV1" tvg-name="CCTV1" tvg-logo="..."CCTV1
+        # 目标格式：#EXTINF:-1 tvg-id="CCTV1" tvg-name="CCTV1" tvg-logo="...",group-title="央视专版",CCTV1
+        sed -i 's/\(tvg-logo="[^"]*"\)/\1,group-title="央视专版",/' cctv_raw.m3u
         
         # 合并两个文件（去除重复的 #EXTM3U 头部）
         # 先写入 migu.m3u（保留其头部）
@@ -78,12 +48,12 @@ jobs:
           cat migu.m3u >> new-iptv.m3u
         fi
         
-        # 追加修改后的 cctv 内容（去掉可能的 #EXTM3U 行）
-        head -1 cctv_modified.m3u | grep -q "^#EXTM3U" && has_header2=true || has_header2=false
+        # 追加修正后的 cctv 内容（去掉可能的 #EXTM3U 行）
+        head -1 cctv_raw.m3u | grep -q "^#EXTM3U" && has_header2=true || has_header2=false
         if [ "$has_header2" = true ]; then
-          tail -n +2 cctv_modified.m3u >> new-iptv.m3u
+          tail -n +2 cctv_raw.m3u >> new-iptv.m3u
         else
-          cat cctv_modified.m3u >> new-iptv.m3u
+          cat cctv_raw.m3u >> new-iptv.m3u
         fi
         
         # 计算哈希和统计信息
@@ -118,13 +88,13 @@ jobs:
         git commit -m "🔄 自动同步IPTV: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
         
         源文件1: migu.m3u (无修改)
-        源文件2: cctv.migu.m3u (已添加 group-title=\"央视专版\")
+        源文件2: cctv.migu.m3u (已自动添加 group-title=\"央视专版\")
         合并后哈希: ${{ steps.download.outputs.new_hash }}"
         git push origin main
     
     - name: Send email notification
       if: steps.compare.outputs.changed == 'true'
-      uses: dawidd6/action-send-mail@v4   # 升级到 v4
+      uses: dawidd6/action-send-mail@v4
       with:
         server_address: smtp.gmail.com
         server_port: 465
