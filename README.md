@@ -3,7 +3,8 @@
 <img src="https://github.com/jia070310/lemonTV/raw/main/pic/1%20(1).png" alt="柠檬IPTV直播" width="100%"/>
 
 # 🍋 柠檬IPTV直播
-
+**4K直播源单独开了一个仓库**
+[4K直播源仓库]([https://github.com/jia070310/4K-IPTV-M3U])
 **一款专为 Android TV / 电视盒子 打造的 IPTV 直播应用**
 
 [![Release](https://img.shields.io/github/v/release/jia070310/lemonTV?style=flat-square&label=最新版本&color=fddd0e)](https://github.com/jia070310/lemonTV/releases/latest)
