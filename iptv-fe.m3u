@@ -385,3 +385,6 @@ http://gslbmgsplive.miguvideo.com/migu/kailu/20200324/cctv15hd/51/index.m3u8?msi
 http://gslbmgsplive.miguvideo.com/migu/kailu/20200324/cctv17hd/51/index.m3u8?msisdn=e27ec036eef5d3c3757ba92fef9e8a30&mdspid=&spid=699004&netType=0&sid=5501083631&pid=2028597139&timestamp=20260611090105&Channel_ID=0116_2600034600-99000-201600010010028&ProgramID=673168256&ParentNodeID=-99&assertID=5501083631&client_ip=39.98.82.147&SecurityKey=20260611090105&promotionId=&mvid=5102910396&mcid=500020&playurlVersion=ZQ-A1-9.6.0.4-RELEASE&userid=&jmhm=&videocodec=h264&appCode=miguvideo_android&bean=mgspad&tid=android&conFee=0&puData=423f513ab31cf7103cca87ad854d184b&ddCalcu=b442v83a1fad5a41538adba3718cafc7c130&sv=10004&ct=android
 
 # ================================== 数字频道 ==================================
+
+#EXTINF:-1 tvg-id="IPTV家庭影院" tvg-name="IPTV家庭影院" tvg-logo="http://wapx.cmvideo.cn:8080/publish/poms/image/5501/083/631/202204010052_1626678428060_H32_1080.webp",group-title="IPTV",,CCTV17
+http://111.199.7.84:8686/rtp/239.3.1.93:4120
